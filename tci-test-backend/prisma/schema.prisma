@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 커플 세션 모델
+model CoupleSession {
+  id            String    @id @default(cuid())
+  code          String    @unique              // TCI-XXXX-XXXX 형식
+
+  // Person 1 (세션 생성자)
+  person1Name   String?                        // 선택적 이름
+  person1Result String                         // TestResult JSON (문자열로 저장)
+  person1At     DateTime  @default(now())      // 완료 시각
+
+  // Person 2 (파트너) - nullable
+  person2Name   String?
+  person2Result String?                        // TestResult JSON (문자열로 저장)
+  person2At     DateTime?
+
+  // 메타데이터
+  status        String    @default("waiting")  // waiting | completed
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime                       // 만료 시각 (30일 후)
+
+  // 인덱스
+  @@index([code])
+  @@index([expiresAt])
+  @@index([status])
+}
+

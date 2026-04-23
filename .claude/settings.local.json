@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)",
+      "Bash(npm --version:*)",
+      "Bash(node:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx prisma:*)",
+      "Bash(npm run dev:*)",
+      "Bash(echo:*)",
+      "Bash(npx tsx:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 10 npx vite:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill //F //PID 84948)",
+      "WebSearch",
+      "Bash(if not exist \"D:\\\\repos\\\\harness-test\\\\_workspace\" mkdir \"D:\\\\repos\\\\harness-test\\\\_workspace\")",
+      "Bash(taskkill //F //PID 7080)",
+      "Bash(cmd /c \"cd /d D:\\\\repos\\\\harness-test\\\\tci-test && npm run build 2>&1\")",
+      "Bash(powershell -Command \"cd ''D:\\\\repos\\\\harness-test\\\\tci-test''; npm run build 2>&1\")",
+      "Bash(powershell:*)"
+    ]
+  }
+}
