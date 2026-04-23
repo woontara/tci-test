@@ -45,13 +45,13 @@ const LandingPage: React.FC = () => {
                 <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mx-auto mb-2">
                   <Clock className="w-6 h-6 text-primary-600" />
                 </div>
-                <p className="text-sm text-gray-600">약 5분</p>
+                <p className="text-sm text-gray-600">약 10분</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mx-auto mb-2">
                   <BarChart3 className="w-6 h-6 text-primary-600" />
                 </div>
-                <p className="text-sm text-gray-600">35문항</p>
+                <p className="text-sm text-gray-600">98문항</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mx-auto mb-2">
@@ -147,7 +147,7 @@ const LandingPage: React.FC = () => {
               지금 바로 시작하세요
             </h2>
             <p className="text-primary-100 mb-8 max-w-xl mx-auto">
-              약 5분이면 나의 기질과 성격 유형을 알 수 있습니다.
+              약 10분이면 나의 기질과 성격 유형을 알 수 있습니다.
               결과는 레이더 차트와 함께 상세하게 제공됩니다.
             </p>
             <Link to="/test">

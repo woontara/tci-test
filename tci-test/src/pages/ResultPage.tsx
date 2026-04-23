@@ -50,8 +50,8 @@ const ResultPage: React.FC = () => {
     try {
       // API 호출하여 커플 세션 생성
       const { code } = await createCoupleSession(result);
-      // 초대 페이지로 이동
-      navigate(`/couple/invite/${code}`);
+      // 초대 페이지로 이동 (공유 모드)
+      navigate(`/couple/invite/${code}?mode=share`);
     } catch (error) {
       setCoupleError(getErrorMessage(error));
       setIsCreatingCouple(false);
