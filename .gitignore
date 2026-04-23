@@ -36,3 +36,6 @@ _workspace_*/
 
 # Vercel
 .vercel
+
+# Local Netlify folder
+.netlify
