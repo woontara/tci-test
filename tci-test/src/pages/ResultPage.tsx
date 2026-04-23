@@ -87,7 +87,10 @@ const ResultPage: React.FC = () => {
               검사 결과
             </h1>
             <p className="text-gray-600">
-              {result.completedAt.toLocaleDateString('ko-KR', {
+              {(result.completedAt instanceof Date
+                ? result.completedAt
+                : new Date(result.completedAt)
+              ).toLocaleDateString('ko-KR', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',

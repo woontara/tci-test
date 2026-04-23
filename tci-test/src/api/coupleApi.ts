@@ -64,6 +64,26 @@ export class CoupleApiError extends Error {
 }
 
 /**
+ * 네트워크 에러 클래스
+ */
+export class NetworkError extends Error {
+  constructor(message: string = '네트워크 연결을 확인해주세요.') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+/**
+ * JSON 파싱 에러 클래스
+ */
+export class JsonParseError extends Error {
+  constructor(message: string = '서버 응답을 처리할 수 없습니다.') {
+    super(message);
+    this.name = 'JsonParseError';
+  }
+}
+
+/**
  * API 요청 헬퍼 함수
  */
 async function apiRequest<T>(
@@ -76,15 +96,31 @@ async function apiRequest<T>(
     'Content-Type': 'application/json',
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
+  let response: Response;
 
-  const data = await response.json();
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    // 네트워크 에러 감지: TypeError 또는 오프라인 상태
+    if (error instanceof TypeError || !navigator.onLine) {
+      throw new NetworkError('서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.');
+    }
+    throw error;
+  }
+
+  // JSON 파싱 에러 처리
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new JsonParseError('서버 응답을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.');
+  }
 
   if (!response.ok) {
     // 백엔드 에러 응답 형식: { success: false, error: { code, message } }
@@ -98,13 +134,14 @@ async function apiRequest<T>(
 
   // 백엔드 성공 응답 형식: { success: true, data: {...} } 또는 { success: true, ...fields }
   // data 필드가 있으면 추출, 없으면 success 제외한 나머지 반환
-  if (data.success && data.data !== undefined) {
-    return data.data as T;
+  const responseData = data as { success?: boolean; data?: unknown };
+  if (responseData.success && responseData.data !== undefined) {
+    return responseData.data as T;
   }
 
   // data 필드가 없는 경우 (예: createCoupleSession 응답)
-  if (data.success) {
-    const { success, ...rest } = data;
+  if (responseData.success) {
+    const { success, ...rest } = responseData;
     return rest as T;
   }
 
@@ -166,16 +203,20 @@ export async function createCoupleSession(
 export async function getCoupleData(code: string): Promise<{
   coupleData: ApiCoupleData;
   person1Result: TestResult;
+  person1Name: string | null;
   person2Result: TestResult | null;
+  person2Name: string | null;
 }> {
   const response = await apiRequest<ApiCoupleData>(`/couple/${code}`);
 
   return {
     coupleData: response,
     person1Result: deserializeResult(response.person1.result),
+    person1Name: response.person1.name ?? null,
     person2Result: response.person2
       ? deserializeResult(response.person2.result)
       : null,
+    person2Name: response.person2?.name ?? null,
   };
 }
 
@@ -221,8 +262,19 @@ export function getErrorMessage(error: unknown): string {
     }
   }
 
+  // 네트워크 에러 처리
+  if (error instanceof NetworkError) {
+    return error.message;
+  }
+
+  // JSON 파싱 에러 처리
+  if (error instanceof JsonParseError) {
+    return error.message;
+  }
+
   if (error instanceof Error) {
-    if (error.message.includes('fetch')) {
+    // TypeError는 네트워크 에러일 가능성이 높음
+    if (error instanceof TypeError || !navigator.onLine) {
       return '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.';
     }
     return error.message;

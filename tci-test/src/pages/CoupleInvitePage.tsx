@@ -14,9 +14,11 @@ const CoupleInvitePage: React.FC = () => {
   const isShareMode = searchParams.get('mode') === 'share';
 
   const [inviterResult, setInviterResult] = useState<TestResult | null>(null);
+  const [inviterName, setInviterName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCoupleData = async () => {
@@ -27,7 +29,7 @@ const CoupleInvitePage: React.FC = () => {
       }
 
       try {
-        const { person1Result, person2Result } = await getCoupleData(code);
+        const { person1Result, person2Result, person1Name } = await getCoupleData(code);
 
         // 이미 파트너가 완료한 경우 결과 페이지로 이동
         if (person2Result) {
@@ -36,6 +38,7 @@ const CoupleInvitePage: React.FC = () => {
         }
 
         setInviterResult(person1Result);
+        setInviterName(person1Name);
         setLoading(false);
       } catch (err) {
         setError(getErrorMessage(err));
@@ -51,6 +54,12 @@ const CoupleInvitePage: React.FC = () => {
     ? `${window.location.origin}/couple/invite/${code}`
     : '';
 
+  // 토스트 메시지 표시 헬퍼
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const handleCopyLink = async () => {
     const success = await copyToClipboard(shareUrl);
     if (success) {
@@ -59,7 +68,7 @@ const CoupleInvitePage: React.FC = () => {
     }
   };
 
-  const handleKakaoShare = () => {
+  const handleKakaoShare = async () => {
     const message = `TCI 기질 및 성격 검사 - 커플 분석\n\n나와 성격 궁합 테스트 해볼래?\n테스트 완료하면 우리 궁합을 분석해줘!`;
 
     if (typeof window !== 'undefined' && (window as unknown as { Kakao?: { Share?: { sendDefault: (options: unknown) => void } } }).Kakao?.Share) {
@@ -86,8 +95,10 @@ const CoupleInvitePage: React.FC = () => {
         ],
       });
     } else {
-      copyToClipboard(`${message}\n\n${shareUrl}`);
-      alert('메시지가 클립보드에 복사되었습니다. 카카오톡에 붙여넣기 해주세요!');
+      const success = await copyToClipboard(`${message}\n\n${shareUrl}`);
+      if (success) {
+        showToast('메시지가 클립보드에 복사되었습니다. 카카오톡에 붙여넣기 해주세요!');
+      }
     }
   };
 
@@ -139,6 +150,14 @@ const CoupleInvitePage: React.FC = () => {
   if (isShareMode) {
     return (
       <Layout>
+        {/* 토스트 메시지 */}
+        {toastMessage && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+            <div className="bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg text-sm max-w-sm text-center">
+              {toastMessage}
+            </div>
+          </div>
+        )}
         <div className="min-h-[80vh] flex flex-col justify-center py-8 sm:py-12">
           <Container className="max-w-lg">
             {/* 헤더 */}
@@ -249,7 +268,7 @@ const CoupleInvitePage: React.FC = () => {
               커플 궁합 테스트에<br />초대받았어요!
             </h1>
             <p className="text-gray-600 text-lg">
-              파트너가 당신과의 궁합이 궁금해하고 있어요
+              {inviterName ? `${inviterName}님이` : '파트너가'} 당신과의 궁합이 궁금해하고 있어요
             </p>
           </div>
 
@@ -261,7 +280,7 @@ const CoupleInvitePage: React.FC = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-pink-600 mb-1">
-                  파트너의 성격 유형
+                  {inviterName ? `${inviterName}님의` : '파트너의'} 성격 유형
                 </p>
                 <p className="text-gray-800 font-medium leading-relaxed">
                   {inviterResult.temperamentProfile}

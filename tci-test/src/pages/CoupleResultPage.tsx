@@ -17,6 +17,8 @@ const CoupleResultPage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const [person1Result, setPerson1Result] = useState<TestResult | null>(null);
   const [person2Result, setPerson2Result] = useState<TestResult | null>(null);
+  const [person1Name, setPerson1Name] = useState<string | null>(null);
+  const [person2Name, setPerson2Name] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isWaiting, setIsWaiting] = useState(false);
@@ -31,12 +33,15 @@ const CoupleResultPage: React.FC = () => {
       }
 
       try {
-        const { person1Result: p1, person2Result: p2 } = await getCoupleData(code);
+        const { person1Result: p1, person2Result: p2, person1Name: p1Name, person2Name: p2Name } = await getCoupleData(code);
 
         setPerson1Result(p1);
+        setPerson1Name(p1Name);
 
         if (p2) {
           setPerson2Result(p2);
+          setPerson2Name(p2Name);
+          setIsWaiting(false);
         } else {
           // 아직 파트너가 완료하지 않음
           setIsWaiting(true);
@@ -51,6 +56,26 @@ const CoupleResultPage: React.FC = () => {
 
     fetchCoupleData();
   }, [code]);
+
+  // 파트너 대기 상태일 때 30초마다 자동 폴링
+  useEffect(() => {
+    if (!isWaiting || !code) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { person2Result: p2, person2Name: p2Name } = await getCoupleData(code);
+        if (p2) {
+          setPerson2Result(p2);
+          setPerson2Name(p2Name);
+          setIsWaiting(false);
+        }
+      } catch {
+        // 폴링 중 에러는 무시 (사용자 경험을 위해)
+      }
+    }, 30000); // 30초
+
+    return () => clearInterval(pollInterval);
+  }, [isWaiting, code]);
 
   // 현재 페이지 URL (공유용)
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -203,8 +228,9 @@ const CoupleResultPage: React.FC = () => {
   const compatibilityType = determineCompatibilityType(person1Scales, person2Scales);
   const compatibility = COMPATIBILITY_INTERPRETATIONS[compatibilityType];
 
-  const person1Name = '파트너 1';
-  const person2Name = '파트너 2';
+  // 이름이 없으면 기본값 사용
+  const displayPerson1Name = person1Name || '파트너 1';
+  const displayPerson2Name = person2Name || '파트너 2';
 
   return (
     <Layout>
@@ -219,7 +245,7 @@ const CoupleResultPage: React.FC = () => {
               커플 분석 결과
             </h1>
             <p className="text-gray-600">
-              {person1Name} & {person2Name}
+              {displayPerson1Name} & {displayPerson2Name}
             </p>
             <p className="text-sm text-gray-400 mt-1">
               커플 코드: {code}
@@ -253,8 +279,8 @@ const CoupleResultPage: React.FC = () => {
             <CoupleRadarChart
               results1={person1Result.scales}
               results2={person2Result.scales}
-              name1={person1Name}
-              name2={person2Name}
+              name1={displayPerson1Name}
+              name2={displayPerson2Name}
             />
           </Card>
 
@@ -263,7 +289,7 @@ const CoupleResultPage: React.FC = () => {
             <Card padding="lg" className="border-l-4 border-l-pink-500">
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-pink-500" />
-                {person1Name}
+                {displayPerson1Name}
               </h3>
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">
@@ -277,7 +303,7 @@ const CoupleResultPage: React.FC = () => {
             <Card padding="lg" className="border-l-4 border-l-blue-500">
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-blue-500" />
-                {person2Name}
+                {displayPerson2Name}
               </h3>
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">
@@ -344,12 +370,12 @@ const CoupleResultPage: React.FC = () => {
                     key={scale1.scale}
                     scaleCode={scale1.scale as ScaleCode}
                     person1={{
-                      name: person1Name,
+                      name: person1Name || '파트너 1',
                       percentage: scale1.percentage,
                       level: scale1.level,
                     }}
                     person2={{
-                      name: person2Name,
+                      name: person2Name || '파트너 2',
                       percentage: scale2.percentage,
                       level: scale2.level,
                     }}

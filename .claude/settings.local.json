@@ -23,7 +23,8 @@
       "Bash(taskkill //F //PID 7080)",
       "Bash(cmd /c \"cd /d D:\\\\repos\\\\harness-test\\\\tci-test && npm run build 2>&1\")",
       "Bash(powershell -Command \"cd ''D:\\\\repos\\\\harness-test\\\\tci-test''; npm run build 2>&1\")",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "WebFetch(domain:tci-test-app.netlify.app)"
     ]
   }
 }
